@@ -6,8 +6,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [clientName, setClientName] = useState("");
   const [ticketId, setTicketId] = useState("");
-  const [channelName, setChannelName] = useState("");
 
+  // رابط الدعوة الخاص بسيرفرك في ديسكورد
   const DISCORD_SERVER_INVITE = "https://discord.gg/AxRFyRZM9";
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -20,30 +20,49 @@ export default function Home() {
     const category = formData.get("category") as string;
     const details = formData.get("details") as string;
 
+    const generatedTicketId = `TK-${Math.floor(1000 + Math.random() * 9000)}`;
+    setTicketId(generatedTicketId);
     setClientName(name);
 
+    // رابط الـ Webhook الخاص بقناة الإشعارات في ديسكورد
+    const DISCORD_WEBHOOK_URL =
+      "https://discord.com/api/webhooks/1548062874340032544/la5y_QYaI5LA5_-HT5ca-jec4Yp9kMSCHwuT5j1TUG_Zs71lji99YIuQSQqsfZ6DNSsQ";
+
     try {
-      const res = await fetch("/api/ticket", {
+      const res = await fetch(DISCORD_WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name,
-          contact,
-          issue: `[التصنيف: ${category}] - ${details}`,
+          username: "نظام التذاكر | بن مزهر",
+          avatar_url: "https://i.imgur.com/4M34hi2.png",
+          embeds: [
+            {
+              title: `🚨 طلب فتح تذكرة جديد: [ ${generatedTicketId} ]`,
+              description: `قام **${name}** بتقديم طلب من الموقع وهو في طريقه للانضمام للسيرفر.`,
+              color: 38143,
+              fields: [
+                { name: "🆔 الرقم المرجعي", value: `\`${generatedTicketId}\``, inline: true },
+                { name: "👤 اسم العميل", value: name || "غير محدد", inline: true },
+                { name: "📞 طريقة التواصل", value: contact || "غير محدد", inline: true },
+                { name: "⚙️ نوع المشكلة", value: category || "غير محدد" },
+                { name: "📝 تفاصيل المشكلة", value: details || "لا يوجد تفاصيل" },
+              ],
+              footer: {
+                text: "بن مزهر للحلول التقنية • نظام إدارة الدعم الفني",
+              },
+              timestamp: new Date().toISOString(),
+            },
+          ],
         }),
       });
 
-      const data = await res.json();
-
-      if (data.success) {
-        setTicketId(data.ticketNumber);
-        setChannelName(data.channelName);
-        setSubmitted(true);
-      } else {
-        alert(data.error || "حدث خطأ أثناء إنشاء التذكرة، حاول مرة أخرى.");
+      if (!res.ok) {
+        throw new Error("فشل الإرسال إلى الديسكورد");
       }
+
+      setSubmitted(true);
     } catch (error) {
-      alert("فشل الاتصال بالخادم، تحقق من الاتصال وحاول مرة أخرى.");
+      alert("حدث خطأ أثناء إرسال التذكرة، حاول مرة أخرى.");
     } finally {
       setLoading(false);
     }
@@ -91,7 +110,7 @@ export default function Home() {
             marginBottom: "25px",
           }}
         >
-          مرحباً بك! اشرح مشكلتك وسيتم فتح روم خاص بك في الديسكورد لحلها مباشرة.
+          مرحباً بك! اكتب تفاصيل طلبك وسيتم إرسالها لمركز الدعم وربطك مباشرة بالسيرفر.
         </p>
 
         {submitted ? (
@@ -109,11 +128,11 @@ export default function Home() {
               👋 أهلاً بك يا {clientName}!
             </h2>
             <p style={{ color: "#e2e8f0", fontSize: "15px" }}>
-              تم إنشاء تذكرتك بنجاح برقم مرجعي:{" "}
+              تم تسجيل طلبك برقم مرجعي:{" "}
               <strong style={{ color: "#38bdf8" }}>{ticketId}</strong>
             </p>
-            <p style={{ color: "#94a3b8", fontSize: "14px" }}>
-              تم إنشاء الروم <strong style={{ color: "#38bdf8" }}>#{channelName}</strong> الخاص بك في ديسكورد. ادخل الآن للمتابعة مع الدعم الفني:
+            <p style={{ color: "#94a3b8", fontSize: "14px", margin: "15px 0" }}>
+              اضغط على الزر أدناه للدخول المباشر إلى سيرفر الديسكورد وفتح تذكرتك والتواصل معنا فوراً:
             </p>
 
             <a
@@ -124,16 +143,17 @@ export default function Home() {
                 display: "inline-block",
                 backgroundColor: "#5865F2",
                 color: "#fff",
-                padding: "12px 20px",
+                padding: "14px 24px",
                 borderRadius: "8px",
                 textDecoration: "none",
                 fontWeight: "bold",
-                fontSize: "15px",
+                fontSize: "16px",
                 marginTop: "10px",
                 marginBottom: "15px",
+                boxShadow: "0 4px 12px rgba(88, 101, 242, 0.4)",
               }}
             >
-              🎧 دخول سيرفر الديسكورد ومتابعة تذكرتك
+              🎧 الدخول إلى سيرفر الديسكورد والتواصل
             </a>
 
             <div style={{ marginTop: "15px" }}>
@@ -273,7 +293,7 @@ export default function Home() {
               type="submit"
               disabled={loading}
               style={{
-                backgroundColor: loading ? "#0284c7" : "#0284c7",
+                backgroundColor: "#0284c7",
                 color: "#fff",
                 border: "none",
                 padding: "12px",
@@ -285,7 +305,7 @@ export default function Home() {
                 opacity: loading ? 0.7 : 1,
               }}
             >
-              {loading ? "جاري إنشاء التذكرة..." : "طلب فتح تذكرة خاصة 🚀"}
+              {loading ? "جاري إرسال الطلب..." : "إرسال وزيارة السيرفر 🚀"}
             </button>
           </form>
         )}
