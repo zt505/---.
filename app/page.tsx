@@ -6,6 +6,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [clientName, setClientName] = useState("");
   const [ticketId, setTicketId] = useState("");
+  const [channelName, setChannelName] = useState("");
 
   const DISCORD_SERVER_INVITE = "https://discord.gg/AxRFyRZM9";
 
@@ -19,99 +20,210 @@ export default function Home() {
     const category = formData.get("category") as string;
     const details = formData.get("details") as string;
 
-    const generatedTicketId = `TK-${Math.floor(1000 + Math.random() * 9000)}`;
-    setTicketId(generatedTicketId);
     setClientName(name);
 
-    const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1548062874340032544/la5y_QYaI5LA5_-HT5ca-jec4Yp9kMSCHwuT5j1TUG_Zs71lji99YIuQSQqsfZ6DNSsQ";
-
     try {
-      const res = await fetch(DISCORD_WEBHOOK_URL, {
+      const res = await fetch("/api/ticket", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: "نظام التذاكر | بن مزهر",
-          avatar_url: "https://i.imgur.com/4M34hi2.png",
-          embeds: [
-            {
-              title: `🚨 طلب فتح تذكرة خاصة جديدة: [ ${generatedTicketId} ]`,
-              description: `قام **${name}** بتقديم طلب دعم، وهو بانتظار فتح روم خاص معه في الديسكورد.`,
-              color: 38143,
-              fields: [
-                { name: "🆔 الرقم المرجعي", value: `\`${generatedTicketId}\``, inline: true },
-                { name: "👤 اسم العميل", value: name || "غير محدد", inline: true },
-                { name: "📞 طريقة التواصل", value: contact || "غير محدد", inline: true },
-                { name: "⚙️ نوع المشكلة", value: category || "غير محدد" },
-                { name: "📝 تفاصيل المشكلة", value: details || "لا يوجد تفاصيل" },
-              ],
-              footer: {
-                text: "بن مزهر للحلول التقنية • نظام إدارة الدعم الفني",
-              },
-              timestamp: new Date().toISOString(),
-            },
-          ],
+          name,
+          contact,
+          issue: `[التصنيف: ${category}] - ${details}`,
         }),
       });
 
-      if (!res.ok) {
-        throw new Error("فشل الإرسال إلى الديسكورد");
-      }
+      const data = await res.json();
 
-      setSubmitted(true);
+      if (data.success) {
+        setTicketId(data.ticketNumber);
+        setChannelName(data.channelName);
+        setSubmitted(true);
+      } else {
+        alert(data.error || "حدث خطأ أثناء إنشاء التذكرة، حاول مرة أخرى.");
+      }
     } catch (error) {
-      alert("حدث خطأ أثناء إرسال التذكرة، حاول مرة أخرى.");
+      alert("فشل الاتصال بالخادم، تحقق من الاتصال وحاول مرة أخرى.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div dir="rtl" style={{ fontFamily: 'system-ui, sans-serif', backgroundColor: '#0f172a', color: '#fff', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
-      <div style={{ backgroundColor: '#1e293b', padding: '30px', borderRadius: '12px', width: '100%', maxWidth: '550px', boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}>
-        
-        <h1 style={{ textAlign: 'center', color: '#38bdf8', marginBottom: '8px', fontSize: '26px' }}>💻 بن مزهر للحلول التقنية</h1>
-        <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: '14px', marginBottom: '25px' }}>مرحباً بك! اشرح مشكلتك وسيتم فتح روم خاص بك في الديسكورد لحلها مباشرة.</p>
+    <div
+      dir="rtl"
+      style={{
+        fontFamily: "system-ui, sans-serif",
+        backgroundColor: "#0f172a",
+        color: "#fff",
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: "20px",
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: "#1e293b",
+          padding: "30px",
+          borderRadius: "12px",
+          width: "100%",
+          maxWidth: "550px",
+          boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
+        }}
+      >
+        <h1
+          style={{
+            textAlign: "center",
+            color: "#38bdf8",
+            marginBottom: "8px",
+            fontSize: "26px",
+          }}
+        >
+          💻 بن مزهر للحلول التقنية
+        </h1>
+        <p
+          style={{
+            textAlign: "center",
+            color: "#94a3b8",
+            fontSize: "14px",
+            marginBottom: "25px",
+          }}
+        >
+          مرحباً بك! اشرح مشكلتك وسيتم فتح روم خاص بك في الديسكورد لحلها مباشرة.
+        </p>
 
         {submitted ? (
-          <div style={{ backgroundColor: '#0f2942', border: '1px solid #38bdf8', padding: '25px', borderRadius: '10px', textAlign: 'center', lineHeight: '1.8' }}>
-            <h2 style={{ color: '#38bdf8', marginTop: 0 }}>👋 أهلاً بك يا {clientName}!</h2>
-            <p style={{ color: '#e2e8f0', fontSize: '15px' }}>
-              تم تسجيل تفاصيل تذكرتك برقم مرجعي: <strong style={{ color: '#38bdf8' }}>{ticketId}</strong>
+          <div
+            style={{
+              backgroundColor: "#0f2942",
+              border: "1px solid #38bdf8",
+              padding: "25px",
+              borderRadius: "10px",
+              textAlign: "center",
+              lineHeight: "1.8",
+            }}
+          >
+            <h2 style={{ color: "#38bdf8", marginTop: 0 }}>
+              👋 أهلاً بك يا {clientName}!
+            </h2>
+            <p style={{ color: "#e2e8f0", fontSize: "15px" }}>
+              تم إنشاء تذكرتك بنجاح برقم مرجعي:{" "}
+              <strong style={{ color: "#38bdf8" }}>{ticketId}</strong>
             </p>
-            <p style={{ color: '#94a3b8', fontSize: '14px' }}>
-              لتواصل أسرع ولفتح **روم خاص بك مستقل وشفاف** معنا، ادخل سيرفر الديسكورد الآن واضغط على زر إنشاء تذكرة:
+            <p style={{ color: "#94a3b8", fontSize: "14px" }}>
+              تم إنشاء الروم <strong style={{ color: "#38bdf8" }}>#{channelName}</strong> الخاص بك في ديسكورد. ادخل الآن للمتابعة مع الدعم الفني:
             </p>
-            
-            <a 
-              href={DISCORD_SERVER_INVITE} 
-              target="_blank" 
+
+            <a
+              href={DISCORD_SERVER_INVITE}
+              target="_blank"
               rel="noopener noreferrer"
-              style={{ display: 'inline-block', backgroundColor: '#5865F2', color: '#fff', padding: '12px 20px', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '15px', marginTop: '10px', marginBottom: '15px' }}
+              style={{
+                display: "inline-block",
+                backgroundColor: "#5865F2",
+                color: "#fff",
+                padding: "12px 20px",
+                borderRadius: "8px",
+                textDecoration: "none",
+                fontWeight: "bold",
+                fontSize: "15px",
+                marginTop: "10px",
+                marginBottom: "15px",
+              }}
             >
-              🎧 دخول سيرفر الديسكورد واستلام رومك الخاص
+              🎧 دخول سيرفر الديسكورد ومتابعة تذكرتك
             </a>
 
-            <div style={{ marginTop: '15px' }}>
-              <button onClick={() => setSubmitted(false)} style={{ backgroundColor: '#334155', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+            <div style={{ marginTop: "15px" }}>
+              <button
+                onClick={() => setSubmitted(false)}
+                style={{
+                  backgroundColor: "#334155",
+                  color: "#fff",
+                  border: "none",
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "13px",
+                }}
+              >
                 إرسال طلب آخر
               </button>
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          <form
+            onSubmit={handleSubmit}
+            style={{ display: "flex", flexDirection: "column", gap: "15px" }}
+          >
             <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>اسمك الكريم:</label>
-              <input name="name" type="text" required placeholder="اكتب اسمك هنا" style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #334155', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box' }} />
+              <label style={{ display: "block", marginBottom: "5px", fontSize: "14px" }}>
+                اسمك الكريم:
+              </label>
+              <input
+                name="name"
+                type="text"
+                required
+                placeholder="اكتب اسمك هنا"
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "6px",
+                  border: "1px solid #334155",
+                  backgroundColor: "#0f172a",
+                  color: "#fff",
+                  boxSizing: "border-box",
+                }}
+              />
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>رقم التواصل (واتساب / يوزر الديسكورد):</label>
-              <input name="contact" type="text" required placeholder="مثال: 0500000000 أو Username" style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #334155', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box' }} />
+              <label style={{ display: "block", marginBottom: "5px", fontSize: "14px" }}>
+                رقم التواصل (واتساب / يوزر الديسكورد):
+              </label>
+              <input
+                name="contact"
+                type="text"
+                required
+                placeholder="مثال: 0500000000 أو Username"
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "6px",
+                  border: "1px solid #334155",
+                  backgroundColor: "#0f172a",
+                  color: "#fff",
+                  boxSizing: "border-box",
+                }}
+              />
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: 'bold', color: '#38bdf8' }}>نوع المشكلة:</label>
-              <select name="category" style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #334155', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box' }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  color: "#38bdf8",
+                }}
+              >
+                نوع المشكلة:
+              </label>
+              <select
+                name="category"
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "6px",
+                  border: "1px solid #334155",
+                  backgroundColor: "#0f172a",
+                  color: "#fff",
+                  boxSizing: "border-box",
+                }}
+              >
                 <optgroup label="🎮 مشاكل الألعاب والقيمنق">
                   <option>هبوط الفريمات والتقطيع (FPS Drops / Stuttering)</option>
                   <option>خروج اللعبة فجأة (Game Crash / Back to Desktop)</option>
@@ -136,214 +248,48 @@ export default function Home() {
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: 'bold' }}>اكتب مشكلتك بالتفصيل:</label>
-              <textarea name="details" rows={5} required placeholder="اشرح المشكلة، ومتى تظهر لك، ومواصفات جهازك إذا أمكن..." style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #334155', backgroundColor: '#0f172a', color: '#fff', boxSizing: 'border-box', resize: 'vertical' }}></textarea>
+              <label style={{ display: "block", marginBottom: "5px", fontSize: "14px", fontWeight: "bold" }}>
+                اكتب مشكلتك بالتفصيل:
+              </label>
+              <textarea
+                name="details"
+                rows={5}
+                required
+                placeholder="اشرح المشكلة، ومتى تظهر لك، ومواصفات جهازك إذا أمكن..."
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "6px",
+                  border: "1px solid #334155",
+                  backgroundColor: "#0f172a",
+                  color: "#fff",
+                  boxSizing: "border-box",
+                  resize: "vertical",
+                }}
+              ></textarea>
             </div>
 
-            <button type="submit" disabled={loading} style={{ backgroundColor: '#0284c7', color: '#fff', border: 'none', padding: '12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px', marginTop: '10px' }}>
-              {loading ? "جاري الإرسال..." : "طلب فتح تذكرة خاصة 🚀"}
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                backgroundColor: loading ? "#0284c7" : "#0284c7",
+                color: "#fff",
+                border: "none",
+                padding: "12px",
+                borderRadius: "6px",
+                cursor: loading ? "not-allowed" : "pointer",
+                fontWeight: "bold",
+                fontSize: "16px",
+                marginTop: "10px",
+                opacity: loading ? 0.7 : 1,
+              }}
+            >
+              {loading ? "جاري إنشاء التذكرة..." : "طلب فتح تذكرة خاصة 🚀"}
             </button>
           </form>
         )}
       </div>
-    </div>
-  );
-}'use client';
-import { useState } from 'react';
-
-export default function TicketPage() {
-  const [name, setName] = useState('');
-  const [message, setMessage] = useState('');
-  const [status, setStatus] = useState('');
-
-  const sendTicket = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setStatus('جاري إرسال التذكرة...');
-
-    // استبدل الرابط أدناه برابط الـ Webhook الخاص بك من ديسكورد
-    const WEBHOOK_URL = 'ضع_رابط_WEB_HOOK_هنا';
-
-    try {
-      const res = await fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          embeds: [
-            {
-              title: '🎫 تذكرة جديدة من الموقع',
-              color: 3447003,
-              fields: [
-                { name: 'اسم العميل', value: name || 'غير محدد', inline: true },
-                { name: 'تفاصيل المشكلة / الطلب', value: message || 'لا يوجد تفاصيل' },
-              ],
-              timestamp: new Date().toISOString(),
-            },
-          ],
-        }),
-      });
-
-      if (res.ok) {
-        setStatus('تم إرسال التذكرة بنجاح إلى الديسكورد! ✅');
-        setName('');
-        setMessage('');
-      } else {
-        setStatus('حدث خطأ أثناء الإرسال، تحقق من رابط Webhook.');
-      }
-    } catch (err) {
-      setStatus('فشل الإرسال.');
-    }
-  };
-
-  return (
-    <div style={{ maxWidth: '500px', margin: '50px auto', fontFamily: 'sans-serif', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
-      <h2>إنشاء تذكرة دعم فني</h2>
-      <form onSubmit={sendTicket}>
-        <div style={{ marginBottom: '15px' }}>
-          <label>اسمك / اسم المستخدم:</label>
-          <input
-            type="text"
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            style={{ width: '100%', padding: '8px', marginTop: '5px' }}
-          />
-        </div>
-        <div style={{ marginBottom: '15px' }}>
-          <label>تفاصيل التذكرة:</label>
-          <textarea
-            required
-            rows={4}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            style={{ width: '100%', padding: '8px', marginTop: '5px' }}
-          ></textarea>
-        </div>
-        <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#5865F2', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-          إرسال التذكرة
-        </button>
-      </form>
-      {status && <p style={{ marginTop: '15px' }}>{status}</p>}
-    </div>
-  );
-}'use client';
-import { useState } from 'react';
-
-export default function TicketForm() {
-  const [name, setName] = useState('');
-  const [contact, setContact] = useState('');
-  const [issue, setIssue] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setResult(null);
-
-    try {
-      const res = await fetch('/api/ticket', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, contact, issue }),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setResult({
-          success: true,
-          message: `تم إنشاء التذكرة بنجاح! رقم التذكرة: ${data.ticketNumber} وتم فتح الروم (${data.channelName}) في ديسكورد.`,
-        });
-        setName('');
-        setContact('');
-        setIssue('');
-      } else {
-        setResult({
-          success: false,
-          message: data.error || 'حدث خطأ أثناء إنشاء التذكرة.',
-        });
-      }
-    } catch (err) {
-      setResult({
-        success: false,
-        message: 'فشل الاتصال بالخادم، حاول مرة أخرى.',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div style={{ maxWidth: '600px', margin: '40px auto', padding: '24px', fontFamily: 'system-ui, sans-serif', direction: 'rtl' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>🎫 بوابة فتح تذكرة دعم فني</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>اسم العميل:</label>
-          <input
-            type="text"
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="أدخل اسمك"
-            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }}
-          />
-        </div>
-
-        <div>
-          <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>طريقة التواصل (ديسكورد / جوال):</label>
-          <input
-            type="text"
-            required
-            value={contact}
-            onChange={(e) => setContact(e.target.value)}
-            placeholder="مثال: Discord ID أو رقم الجوال"
-            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }}
-          />
-        </div>
-
-        <div>
-          <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>تفاصيل المشكلة / الطلب:</label>
-          <textarea
-            required
-            rows={5}
-            value={issue}
-            onChange={(e) => setIssue(e.target.value)}
-            placeholder="اكتب تفاصيل طلبك هنا..."
-            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }}
-          ></textarea>
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            padding: '12px',
-            backgroundColor: loading ? '#888' : '#5865F2',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold',
-          }}
-        >
-          {loading ? 'جاري فتح التذكرة...' : 'إرسال التذكرة'}
-        </button>
-      </form>
-
-      {result && (
-        <div
-          style={{
-            marginTop: '20px',
-            padding: '12px',
-            borderRadius: '6px',
-            backgroundColor: result.success ? '#d4edda' : '#f8d7da',
-            color: result.success ? '#155724' : '#721c24',
-          }}
-        >
-          {result.message}
-        </div>
-      )}
     </div>
   );
 }
