@@ -148,4 +148,81 @@ export default function Home() {
       </div>
     </div>
   );
+}'use client';
+import { useState } from 'react';
+
+export default function TicketPage() {
+  const [name, setName] = useState('');
+  const [message, setMessage] = useState('');
+  const [status, setStatus] = useState('');
+
+  const sendTicket = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus('جاري إرسال التذكرة...');
+
+    // استبدل الرابط أدناه برابط الـ Webhook الخاص بك من ديسكورد
+    const WEBHOOK_URL = 'ضع_رابط_WEB_HOOK_هنا';
+
+    try {
+      const res = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          embeds: [
+            {
+              title: '🎫 تذكرة جديدة من الموقع',
+              color: 3447003,
+              fields: [
+                { name: 'اسم العميل', value: name || 'غير محدد', inline: true },
+                { name: 'تفاصيل المشكلة / الطلب', value: message || 'لا يوجد تفاصيل' },
+              ],
+              timestamp: new Date().toISOString(),
+            },
+          ],
+        }),
+      });
+
+      if (res.ok) {
+        setStatus('تم إرسال التذكرة بنجاح إلى الديسكورد! ✅');
+        setName('');
+        setMessage('');
+      } else {
+        setStatus('حدث خطأ أثناء الإرسال، تحقق من رابط Webhook.');
+      }
+    } catch (err) {
+      setStatus('فشل الإرسال.');
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: '500px', margin: '50px auto', fontFamily: 'sans-serif', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
+      <h2>إنشاء تذكرة دعم فني</h2>
+      <form onSubmit={sendTicket}>
+        <div style={{ marginBottom: '15px' }}>
+          <label>اسمك / اسم المستخدم:</label>
+          <input
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+          />
+        </div>
+        <div style={{ marginBottom: '15px' }}>
+          <label>تفاصيل التذكرة:</label>
+          <textarea
+            required
+            rows={4}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+          ></textarea>
+        </div>
+        <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#5865F2', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+          إرسال التذكرة
+        </button>
+      </form>
+      {status && <p style={{ marginTop: '15px' }}>{status}</p>}
+    </div>
+  );
 }
