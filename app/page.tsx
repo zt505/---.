@@ -225,4 +225,125 @@ export default function TicketPage() {
       {status && <p style={{ marginTop: '15px' }}>{status}</p>}
     </div>
   );
+}'use client';
+import { useState } from 'react';
+
+export default function TicketForm() {
+  const [name, setName] = useState('');
+  const [contact, setContact] = useState('');
+  const [issue, setIssue] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setResult(null);
+
+    try {
+      const res = await fetch('/api/ticket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, contact, issue }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setResult({
+          success: true,
+          message: `تم إنشاء التذكرة بنجاح! رقم التذكرة: ${data.ticketNumber} وتم فتح الروم (${data.channelName}) في ديسكورد.`,
+        });
+        setName('');
+        setContact('');
+        setIssue('');
+      } else {
+        setResult({
+          success: false,
+          message: data.error || 'حدث خطأ أثناء إنشاء التذكرة.',
+        });
+      }
+    } catch (err) {
+      setResult({
+        success: false,
+        message: 'فشل الاتصال بالخادم، حاول مرة أخرى.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: '600px', margin: '40px auto', padding: '24px', fontFamily: 'system-ui, sans-serif', direction: 'rtl' }}>
+      <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>🎫 بوابة فتح تذكرة دعم فني</h2>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div>
+          <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>اسم العميل:</label>
+          <input
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="أدخل اسمك"
+            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }}
+          />
+        </div>
+
+        <div>
+          <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>طريقة التواصل (ديسكورد / جوال):</label>
+          <input
+            type="text"
+            required
+            value={contact}
+            onChange={(e) => setContact(e.target.value)}
+            placeholder="مثال: Discord ID أو رقم الجوال"
+            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }}
+          />
+        </div>
+
+        <div>
+          <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>تفاصيل المشكلة / الطلب:</label>
+          <textarea
+            required
+            rows={5}
+            value={issue}
+            onChange={(e) => setIssue(e.target.value)}
+            placeholder="اكتب تفاصيل طلبك هنا..."
+            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }}
+          ></textarea>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            padding: '12px',
+            backgroundColor: loading ? '#888' : '#5865F2',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            fontSize: '16px',
+            fontWeight: 'bold',
+          }}
+        >
+          {loading ? 'جاري فتح التذكرة...' : 'إرسال التذكرة'}
+        </button>
+      </form>
+
+      {result && (
+        <div
+          style={{
+            marginTop: '20px',
+            padding: '12px',
+            borderRadius: '6px',
+            backgroundColor: result.success ? '#d4edda' : '#f8d7da',
+            color: result.success ? '#155724' : '#721c24',
+          }}
+        >
+          {result.message}
+        </div>
+      )}
+    </div>
+  );
 }
