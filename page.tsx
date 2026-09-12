@@ -26,7 +26,7 @@ export default function Home() {
     const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1548062874340032544/la5y_QYaI5LA5_-HT5ca-jec4Yp9kMSCHwuT5j1TUG_Zs71lji99YIuQSQqsfZ6DNSsQ";
 
     try {
-      await fetch(DISCORD_WEBHOOK_URL, {
+      const res = await fetch(DISCORD_WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -52,6 +52,11 @@ export default function Home() {
           ],
         }),
       });
+
+      if (!res.ok) {
+        throw new Error("فشل الإرسال إلى الديسكورد");
+      }
+
       setSubmitted(true);
     } catch (error) {
       alert("حدث خطأ أثناء إرسال التذكرة، حاول مرة أخرى.");
@@ -139,4 +144,8 @@ export default function Home() {
               {loading ? "جاري الإرسال..." : "طلب فتح تذكرة خاصة 🚀"}
             </button>
           </form>
-        )
+        )}
+      </div>
+    </div>
+  );
+}
